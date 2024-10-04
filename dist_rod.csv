@@ -1,4 +1,4 @@
-from,to,sum_value
+from,to,dist_rod
 North,Northeast,4172.59259259259
 Southeast,Northeast,2270.66666666667
 Midwest,Northeast,2587.83333333333

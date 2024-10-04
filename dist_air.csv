@@ -1,4 +1,4 @@
-from,to,sum_value
+from,to,dist_air
 North,Northeast,2252.06349206349
 Southeast,Northeast,1755.97222222222
 Midwest,Northeast,1933.16666666667
