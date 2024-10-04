@@ -14,8 +14,8 @@ novoscasos = read.csv("https://raw.githubusercontent.com/ProfNascimento/spatialB
 
 # DATA WRANGLING
 DB = novoscasos %>% filter(date <= '2022-02-15') %>% mutate(diag = as.Date(novoscasos$date),
-                           weekno = as.numeric(diag - first(diag)),
-                           weekno = (weekno %/% 7) +1) %>% 
+                                                            weekno = as.numeric(diag - first(diag)),
+                                                            weekno = (weekno %/% 7) +1) %>% 
   mutate(area = ifelse(state == 'AC' | state == "AM" | state ==  "RR" | state ==  "RO" | state ==  "AP" | state ==  "PA" | state ==  "TO", 'North', 
                        ifelse(state == "MA" | state ==  "PI" | state ==  "CE" | state ==  "RN" | state ==  "PB" | state ==  "PE" | state ==  "AL" | state ==  "SE" | state ==  "BA", 'Northeast',
                               ifelse(state == "PR" | state == "SC" | state ==  "RS", 'South',
@@ -51,13 +51,27 @@ teste <- DB[-c(1:82),-1]
 
 # TABU MODEL (NON-INFORMATIVE SPATIAL PRIOR)
 modtabu_train <- boot.strength(train, R = 1000, algorithm = 'tabu', debug = FALSE)
-modtabu_train
+modtabu_train2 = modtabu_train
 
 qgraph(modtabu_train, asize=5,
        legend.cex=0.5,
        edge.color="black",
        color="#80deea", 
        edge.labels=T)
+
+# HEATMAP BN PLOT
+modtabu_train %>% mutate(from = fct_relevel(from, "Midwest", "Northeast", "North", "Southeast", "South"),
+                         to = fct_relevel(to, "Midwest", "Northeast", "North", "Southeast", "South") ) %>% 
+  ggplot( aes(from, to) ) +
+  geom_tile( aes(fill = strength), color = "white" ) + scale_fill_gradient(low = "white", high = "blue") +
+  ylab(" ") +  xlab(" ") + labs(fill = " ") +
+  theme(legend.position = "bottom",
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10),
+        plot.title = element_text(size=18),
+        axis.title = element_text(size=16,face="bold"),
+        axis.text.x = element_text(angle = 0, hjust = 0.5),
+        axis.text = element_text(size = rel(1.5)))
 
 modtabu_train_medio <- averaged.network(modtabu_train, threshold = 0.5)
 modelstring(modtabu_train_medio)
@@ -96,27 +110,47 @@ modtabu_train <- modtabu_train %>% mutate(
   ) %>% select(from, to, strength, direction, tabu_strengh, dist_rod, fb_rod, fb_rod2, dist_air, fb_air, fb_air2) 
 
 # FIT MODEL TABU (NON-INFORMATIVE PRIOR)
+modelstring(modBF_train_medio)
 mod.Tabu = bn.fit(modtabu_train_medio, data = train)
 
 # BAYES FACTOR --ROAD Dist--
-plot01 <- bnlearn::model2network("[Northeast|Midwest:South][North|Midwest][Midwest|Southeast][South][Southeast]")
+modtabu_train2$strength=modtabu_train$fb_rod
+modBF_train_medio <- averaged.network(modtabu_train2, threshold = 3)
+modelstring(modBF_train_medio)
+
+plot01 <- bnlearn::model2network(modelstring(modBF_train_medio))
 qgraph::qgraph(plot01, asize = 5, color = "tomato", title = "ROAD DAG")
 mod.Rod <- bn.fit(plot01, train)
 
 # BAYES FACTOR --ROAD**2 Dist--
-plot02 <- bnlearn::model2network("[Northeast|Midwest:South][North|Midwest][Midwest|Southeast][South][Southeast]")
+modtabu_train2$strength=modtabu_train$fb_rod2
+modBF_train_medio <- averaged.network(modtabu_train2, threshold = 3)
+modelstring(modBF_train_medio)
+
+plot02 <- bnlearn::model2network(modelstring(modBF_train_medio))
 qgraph::qgraph(plot02, asize = 5, color = "tomato", title = "ROAD**2 DAG")
 mod.Rod2 <- bn.fit(plot02, train)
 
 # BAYES FACTOR --AIR Dist--
-plot03 <- bnlearn::model2network("[Northeast|Midwest:South][North|Midwest][Midwest|Southeast][South][Southeast]")
+modtabu_train2$strength=modtabu_train$fb_air
+modBF_train_medio <- averaged.network(modtabu_train2, threshold = 3)
+modelstring(modBF_train_medio)
+
+plot03 <- bnlearn::model2network(modelstring(modBF_train_medio))
 qgraph::qgraph(plot03, asize = 5, color = "tomato", title = "AIR DAG")
 mod.Air <- bn.fit(plot03, train)
 
 # BAYES FACTOR --AIR**2 Dist--
-plot04 <- bnlearn::model2network("[Northeast|Midwest:South][North|Midwest][Midwest|Southeast][South][Southeast]")
+modtabu_train2$strength=modtabu_train$fb_rod2
+modBF_train_medio <- averaged.network(modtabu_train2, threshold = 3)
+modelstring(modBF_train_medio)
+
+plot04 <- bnlearn::model2network(modelstring(modBF_train_medio))
 qgraph::qgraph(plot04, asize = 5, color = "tomato", title = "AIR**2 DAG")
 mod.Air2 <- bn.fit(plot04, train)
+
+#all.equal(cpdag(plot01), cpdag(plot03))
+#all.equal(cpdag(plot02), cpdag(plot04))
 
 ######################################################################
 ## STEP 02 - TIME SERIES MODELING
@@ -127,23 +161,24 @@ analyze_model <- function(DB, model) {
   for (list_name in names(model)) {
     # Calculate residuals for the current node
     ress <- DB[[list_name]] - predict(model, node = list_name, data = DB)
-      
-      # Step 2: Fit ARIMA model to the residuals
-      fit <- auto.arima(ress)
-      
-      # Store the results in the list
-      results[[list_name]] <- list(fit = fit)
+    
+    # Step 2: Fit ARIMA model to the residuals
+    fit <- auto.arima(ress)
+    
+    # Store the results in the list
+    results[[list_name]] <- list(fit = fit)
   }
   # Return the list of results
   return(results)
 }
 
-BN.ARIMA = analyze_model(DB, mod.Tabu)
+BN.ARIMA = analyze_model(DB, mod.Rod)
 
 # UNIVARIATE RESIDUAL ANALYSIS (BN.ARIMA)
 cpgram(residuals(BN.ARIMA$North$fit))
 acf(residuals(BN.ARIMA$North$fit))
 Box.test(residuals(BN.ARIMA$North$fit), lag = 20, type = "Ljung-Box")
+shapiro.test(residuals(BN.ARIMA$North$fit))
 
 # VISUAL COMPARISON MODELS (OBS SERIES, BN FORECAST, BN+ARIMA FORECAST)
 FIT_plot <- function(DB, BN.model, list_name) {
@@ -222,5 +257,4 @@ FIT_plot <- function(DB, BN.model, list_name) {
   print(paste("BN BGE:", bn_bge))
 }
 
-FIT_plot(DB, mod.Tabu, "Northeast")
-
+FIT_plot(DB, mod.Rod, "North")
