@@ -258,3 +258,23 @@ FIT_plot <- function(DB, BN.model, list_name) {
 }
 
 FIT_plot(DB, mod.Rod, "North")
+
+## REGRESSION COEF HEATMAP --ROAD DIST. MODEL--
+bnfit2nbn(mod.Rod) %>% 
+  rmatrix4nbn(stdev = FALSE) %>% 
+  melt(id.vars = "to") %>%
+  mutate(from = fct_relevel(from, "Midwest", "Northeast", "North", "Southeast", "South"),
+         to = fct_relevel(to, "Midwest", "Northeast", "North", "Southeast", "South") ) %>% 
+  ggplot( aes(from, to) ) +
+  geom_tile(aes(fill = round(value,2) )) +
+  scale_fill_gradient2(low="darkred", high="darkgreen", guide="colorbar")+
+  guides(fill = guide_colourbar(title = "REG. COEF."))+
+  ylab("Child Node") + xlab("Parent Node") +
+  theme(legend.position = "right",
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 18),
+        plot.title = element_text(size=18),
+        axis.title=element_text(size=18,face="bold"),
+        axis.text.x = element_text(angle = 0, hjust = 0.5),
+        axis.text = element_text(size = rel(1.5))) +
+  labs(fill = " ") 
