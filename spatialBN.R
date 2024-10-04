@@ -171,13 +171,18 @@ FIT_plot <- function(DB, BN.model, list_name) {
   
   # Step 5: Plot the actual vs predicted values
   time_series_plot <- ggplot(plot_data, aes(x = Time)) +
-    geom_line(aes(y = Actual), color = "black", size = 1) +  # Solid line for actual values
-    geom_line(aes(y = BN_Predicted), color = "blue", linetype = "dashed", size = 1) +  # Dashed blue line for BN predictions
-    geom_line(aes(y = ARIMA_Fitted), color = "orange", linetype = "dashed", size = 1) +  # Dashed orange line for ARIMA fitted values
+    geom_line(aes(y = Actual, color = "Actual"), size = 1) +  # Solid line for actual values
+    geom_line(aes(y = BN_Predicted, color = "BN Predicted"), linetype = "dashed", size = 1) +  # Dashed blue line for BN predictions
+    geom_line(aes(y = ARIMA_Fitted, color = "ARIMA Fitted"), linetype = "dashed", size = 1) +  # Dashed orange line for ARIMA fitted values
+    scale_color_manual(values = c("Actual" = "black", "BN Predicted" = "blue", "ARIMA Fitted" = "orange")) +  # Correct color mapping
     labs(title = paste("Actual vs Predicted -", list_name),
          x = "Time",
-         y = "Values") +
-    theme_minimal()
+         y = "Values",
+         color = "Legend") +  # Label for the legend
+    theme_minimal() +
+    theme(legend.position = c(0.1, 0.9),  # Set legend position to top-left
+          legend.background = element_blank(),  # No background for the legend
+          legend.key = element_blank())  # Remove any boxes around the legend keys
   
   # Step 6: Create cpgram (Cumulative Periodogram) plot for residuals
   cpgram_plot <- ggplot(data = data.frame(residuals = residuals_node), aes(x = residuals)) +
