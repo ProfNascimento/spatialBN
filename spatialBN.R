@@ -209,7 +209,7 @@ FIT_plot <- function(DB, BN.model, list_name) {
     geom_line(aes(y = Actual, color = "Actual"), size = 1) +  # Solid line for actual values
     geom_line(aes(y = BN_Predicted, color = "BN Predicted"), linetype = "dashed", size = 1) +  # Dashed blue line for BN predictions
     geom_line(aes(y = ARIMA_Fitted, color = "BN-ARIMA Fitted"), linetype = "dashed", size = 1) +  # Dashed orange line for ARIMA fitted values
-    scale_color_manual(values = c("Actual" = "black", "BN Predicted" = "blue", "ARIMA Fitted" = "orange")) +  # Correct color mapping
+    scale_color_manual(values = c("Actual" = "black", "BN Predicted" = "blue", "BN-ARIMA Fitted" = "orange")) +  # Correct color mapping
     labs(title = paste("Actual vs Predicted -", list_name),
          x = "Time",
          y = "Values",
@@ -257,7 +257,7 @@ FIT_plot <- function(DB, BN.model, list_name) {
   print(paste("BN BGE:", bn_bge))
 }
 
-FIT_plot(DB, mod.Rod, "North")
+FIT_plot(DB, mod.Rod, "South")
 
 ## REGRESSION COEF HEATMAP --ROAD DIST. MODEL--
 bnfit2nbn(mod.Rod) %>% 
