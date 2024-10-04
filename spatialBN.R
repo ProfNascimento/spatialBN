@@ -173,7 +173,7 @@ FIT_plot <- function(DB, BN.model, list_name) {
   time_series_plot <- ggplot(plot_data, aes(x = Time)) +
     geom_line(aes(y = Actual, color = "Actual"), size = 1) +  # Solid line for actual values
     geom_line(aes(y = BN_Predicted, color = "BN Predicted"), linetype = "dashed", size = 1) +  # Dashed blue line for BN predictions
-    geom_line(aes(y = ARIMA_Fitted, color = "ARIMA Fitted"), linetype = "dashed", size = 1) +  # Dashed orange line for ARIMA fitted values
+    geom_line(aes(y = ARIMA_Fitted, color = "BN-ARIMA Fitted"), linetype = "dashed", size = 1) +  # Dashed orange line for ARIMA fitted values
     scale_color_manual(values = c("Actual" = "black", "BN Predicted" = "blue", "ARIMA Fitted" = "orange")) +  # Correct color mapping
     labs(title = paste("Actual vs Predicted -", list_name),
          x = "Time",
