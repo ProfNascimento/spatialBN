@@ -172,9 +172,10 @@ analyze_model <- function(DB, model) {
   return(results)
 }
 
-BN.ARIMA = analyze_model(DB, mod.Rod)
+## model = {mod.Tabu, mod.Rod, mod.Rod2, mod.Air, mod.Air2}
+( BN.ARIMA = analyze_model(DB, model=mod.Rod) )
 
-# UNIVARIATE RESIDUAL ANALYSIS (BN.ARIMA)
+# UNIVARIATE RESIDUAL ANALYSIS (BN.ARIMA) --North Region--
 cpgram(residuals(BN.ARIMA$North$fit))
 acf(residuals(BN.ARIMA$North$fit))
 Box.test(residuals(BN.ARIMA$North$fit), lag = 20, type = "Ljung-Box")
@@ -257,7 +258,9 @@ FIT_plot <- function(DB, BN.model, list_name) {
   print(paste("BN BGE:", bn_bge))
 }
 
-FIT_plot(DB, mod.Rod, "South")
+## BN.model = {mod.Tabu, mod.Rod, mod.Rod2, mod.Air, mod.Air2}
+## list_name = {"North", "Northeast", "Midwest", "Southeast", "South"}
+FIT_plot(DB, BN.model = mod.Rod, list_name = "South")
 
 ## REGRESSION COEF HEATMAP --ROAD DIST. MODEL--
 bnfit2nbn(mod.Rod) %>% 
