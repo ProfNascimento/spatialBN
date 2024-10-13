@@ -5,6 +5,7 @@ library(bnlearn)
 library(qgraph)
 library(Metrics)
 library(rbmn)
+library(cowplot)
 
 set.seed(20)
 
@@ -110,7 +111,7 @@ modtabu_train <- modtabu_train %>% mutate(
   ) %>% select(from, to, strength, direction, tabu_strengh, dist_rod, fb_rod, fb_rod2, dist_air, fb_air, fb_air2) 
 
 # FIT MODEL TABU (NON-INFORMATIVE PRIOR)
-modelstring(modBF_train_medio)
+modelstring(modtabu_train_medio) 
 mod.Tabu = bn.fit(modtabu_train_medio, data = train)
 
 # BAYES FACTOR --ROAD Dist--
@@ -175,7 +176,7 @@ analyze_model <- function(DB, model) {
 ## model = {mod.Tabu, mod.Rod, mod.Rod2, mod.Air, mod.Air2}
 ( BN.ARIMA = analyze_model(DB, model=mod.Rod) )
 
-# UNIVARIATE RESIDUAL ANALYSIS (BN.ARIMA) --North Region--
+# UNIVARIATE RESIDUAL ANALYSIS (BN.ARIMA)
 cpgram(residuals(BN.ARIMA$North$fit))
 acf(residuals(BN.ARIMA$North$fit))
 Box.test(residuals(BN.ARIMA$North$fit), lag = 20, type = "Ljung-Box")
@@ -265,7 +266,7 @@ FIT_plot(DB, BN.model = mod.Rod, list_name = "South")
 ## REGRESSION COEF HEATMAP --ROAD DIST. MODEL--
 bnfit2nbn(mod.Rod) %>% 
   rmatrix4nbn(stdev = FALSE) %>% 
-  melt(id.vars = "to") %>%
+  reshape2::melt(id.vars = "to") %>%
   mutate(from = fct_relevel(from, "Midwest", "Northeast", "North", "Southeast", "South"),
          to = fct_relevel(to, "Midwest", "Northeast", "North", "Southeast", "South") ) %>% 
   ggplot( aes(from, to) ) +
